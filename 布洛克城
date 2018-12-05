@@ -1,0 +1,119 @@
+import time
+import requests,json
+
+
+cookie=''            #抓包输入自己的cookie
+header={'Authorization': cookie,'Version': '1.3.2'}
+sign="ed873f852abacb47495119b7f22b4940"
+nonce="886938"
+t = time.time()
+t=int(round(t * 1000))
+userId=[] #用户id
+bid=[]      #别人矿id
+bti=[]      #别人矿时间
+id=[]       #自己矿ID
+validTime=[]#自己矿时间
+
+
+
+#查看矿
+def chakan():
+    print("正在查看矿信息")
+    url="http://walletgateway.gxb.io/miner/KanHwIbYeLvqCNrZ378003750/mine/list/v2"
+    header={'Authorization': cookie}
+    request=requests.get(url,headers=header)
+    dic = json.loads(request.text)
+    data=dic['data']
+    mines=data['mines']
+    for a in mines:
+        validTime.append(a['validTime'])
+        id.append(a['id'])
+    print("矿id:",end="")
+    print(id)
+    print("矿ti:",end="")
+    print(validTime)
+    print("当前时间:",end="")
+    print (t)
+
+
+
+        
+#挖自己矿       
+def wakuang(id):        
+    print ("")
+    print("正在进行挖矿")
+    mid='432014780'
+    url="http://walletgateway.gxb.io/miner/KanHwIbYeLvqCNrZ378003750/mine/%s/v2"% id
+    header={'Authorization': cookie}
+    request=requests.get(url,headers=header)
+    print(request.text)
+
+    
+  
+def zhouwei():
+    url="http://walletgateway.gxb.io/miner/steal/user/list/v2?change=true&hasLocation=true&sign=%s&nonce=%s&timestamp=%s"% (sign,nonce,t)
+    request=requests.get(url,headers=header)
+    print(request.text)
+    dic = json.loads(request.text)
+    data=dic['data']
+    print(data)
+    list=data['list']
+    for a in list:
+        userId.append(a['userId'])
+    print("用户列表:",userId)
+    global n
+    n=len(userId)
+
+    
+#查看别人有什么矿
+def chabr(userId):
+    url="http://walletgateway.gxb.io/miner/steal/%s/mine/list?sign=c547e7773ead97b07107d0db2d9d43b3&nonce=2871401&timestamp=1543906240230"% userId
+    header={'Authorization': cookie}
+    request=requests.get(url,headers=header)
+    dic = json.loads(request.text)
+    data=dic['data']
+    for a in data:
+        bid.append(a['mineId'])
+        bti.append(a['validDate'])
+    print("用户Id:"+userId)
+    print(bid)
+    print(bti)
+    print("现在时间:",end='')
+    print(t)
+
+#挖别人矿
+def wakuangbr(userid,id):        
+    print ("")
+    print("正在进行挖矿")
+    url="http://walletgateway.gxb.io/miner/steal/%s/mine/%s?sign=%s&nonce=%s&timestamp=%s"% (userid,id,sign,nonce,t)
+    header={'Authorization': cookie}
+    request=requests.get(url,headers=header)
+    print(request.text)
+
+    
+    
+    
+#挖别人矿   
+zhouwei()
+while n>0:
+    for a in range(n):
+        bid=[]       
+        bti=[]
+        chabr(userId[a])
+        for b in range(len(bid)):
+            if t>bti[b]:
+                wakuangbr(userId[a],bid[b])
+        userId=[]
+    zhouwei()
+   
+
+#挖自己矿   
+chakan()
+while 1:
+    if t>validTime[0]:   #时间到了就开始挖 否则等待
+        print("开始挖矿")
+        wakuang(id[0])
+        id=[]       
+        validTime=[]
+        chakan()
+
